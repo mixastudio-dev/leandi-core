@@ -300,3 +300,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const footerElements = document.querySelectorAll('.footer-copy p');
+  const currentYear = new Date().getFullYear();
+
+  footerElements.forEach(element => {
+    element.innerHTML = `© LeanDI-Core, ${currentYear}`;
+  });
+});
