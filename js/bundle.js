@@ -80,6 +80,90 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+  const menuItems = document.querySelectorAll('.menu-item-has-children');
+
+  function setupAccordion() {
+    const isMobile = window.innerWidth < 1024;
+
+    menuItems.forEach(item => {
+      const subMenu = item.querySelector('.sub-menu');
+      item.classList.remove('accordion-active');
+      if (subMenu) {
+        subMenu.style.overflow = 'hidden';
+        subMenu.style.transition = 'max-height 0.3s ease';
+        if (isMobile) {
+          subMenu.style.maxHeight = '0';
+        } else {
+          subMenu.style.cssText = '';
+        }
+      }
+    });
+  }
+
+  function handleLinkClick(e) {
+    const link = e.currentTarget;
+    const item = link.closest('.menu-item-has-children');
+    const subMenu = item.querySelector('.sub-menu');
+    const isMobile = window.innerWidth < 1024;
+    const href = link.getAttribute('href');
+
+    if (!subMenu || !isMobile) return;
+
+    const wasActive = item.classList.contains('accordion-active');
+
+    if (wasActive) {
+      if (href && href !== '#') {
+        window.location.href = href;
+      }
+    } else {
+      e.preventDefault();
+
+      menuItems.forEach(other => {
+        if (other !== item) {
+          other.classList.remove('accordion-active');
+          const otherSub = other.querySelector('.sub-menu');
+          if (otherSub) otherSub.style.maxHeight = '0';
+        }
+      });
+
+      item.classList.add('accordion-active');
+      subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+    }
+  }
+
+  setupAccordion();
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(setupAccordion, 250);
+  });
+
+  menuItems.forEach(item => {
+    const link = item.querySelector('a');
+    if (link) {
+      link.removeEventListener('click', handleLinkClick);
+      link.addEventListener('click', handleLinkClick);
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    const isMobile = window.innerWidth < 1024;
+    if (!isMobile) return;
+
+    const isClickInsideMenu = e.target.closest('.main-menu');
+
+    if (!isClickInsideMenu) {
+      menuItems.forEach(item => {
+        item.classList.remove('accordion-active');
+        const subMenu = item.querySelector('.sub-menu');
+        if (subMenu) {
+          subMenu.style.maxHeight = '0';
+        }
+      });
+    }
+  });
+
   const mobileMenuButton = document.querySelector('.mobile-menu-button');
   const closeMenuButton = document.querySelector('.close-menu-button');
   const headerNav = document.querySelector('.header-nav');
@@ -100,14 +184,24 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.style.overflow = '';
   }
 
-  mobileMenuButton.addEventListener('click', openMenu);
-  closeMenuButton.addEventListener('click', closeMenu);
+  if (mobileMenuButton) {
+    mobileMenuButton.addEventListener('click', openMenu);
+  }
+
+  if (closeMenuButton) {
+    closeMenuButton.addEventListener('click', closeMenu);
+  }
 
   const menuLinks = document.querySelectorAll('.main-menu a');
   menuLinks.forEach(link => {
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function(e) {
       if (isMobileView()) {
-        closeMenu();
+        const parentItem = link.closest('.menu-item-has-children');
+        const isActive = parentItem && parentItem.classList.contains('accordion-active');
+
+        if (!parentItem || !isActive) {
+          closeMenu();
+        }
       }
     });
   });
@@ -117,9 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
       closeMenu();
     }
   });
-
 });
-
 function checkVisibility() {
   const blocks = document.querySelectorAll('.animate-block');
 
@@ -131,7 +223,6 @@ function checkVisibility() {
     const rect = block.getBoundingClientRect();
     const windowHeight = window.innerHeight;
 
-    // Проверяем, находится ли блок в футере
     const isInFooter = block.closest('footer');
     const offset = (isInFooter || window.innerWidth < 768) ? 0 : 0;
 
@@ -208,3 +299,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
